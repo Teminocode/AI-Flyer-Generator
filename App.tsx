@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import type { FlyerOptions, ImageFile, FlyerType, CanvasFormat, StyleTheme } from './types';
-import { generateFlyerHtml, generateCopySuggestions } from './services/geminiService';
+import { generateFlyerHtml, generateCopySuggestions, generateBackgroundImage, generateImagePromptSuggestion } from './services/geminiService';
 
 import FlyerPreview from './components/FlyerPreview';
 import BrandKitManager from './components/BrandKitManager';
@@ -212,7 +212,10 @@ const App: React.FC = () => {
                             <div className="space-y-4">
                                 <Select label="Canvas Format" value={flyerOptions.canvasFormat} onChange={e => updateOption('canvasFormat', e.target.value as CanvasFormat)} options={canvasFormats} />
                                 <Select label="Style Theme" value={flyerOptions.styleTheme} onChange={e => updateOption('styleTheme', e.target.value as StyleTheme)} options={styleThemes} />
-                                <BackgroundSelector onFileSelect={setBackgroundImage} />
+                                <BackgroundSelector 
+                                    onFileSelect={setBackgroundImage}
+                                    flyerTopic={flyerOptions.topic}
+                                />
                                 <div className="relative">
                                     <label htmlFor="qr-code" className="flex items-center gap-2 text-sm font-medium text-gray-600 mb-2"><QrCodeIcon className="w-5 h-5"/> QR Code URL (Optional)</label>
                                     <input id="qr-code" type="text" value={qrCodeUrl} onChange={e => setQrCodeUrl(e.target.value)} placeholder="https://your-website.com" className="block w-full text-sm border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500" />

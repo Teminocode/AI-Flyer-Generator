@@ -1,4 +1,4 @@
-import { GoogleGenAI } from "@google/genai";
+import { GoogleGenAI, Modality } from "@google/genai";
 import type { FlyerOptions, CanvasFormat, FlyerType, StyleTheme } from '../types';
 
 const getCanvasDimensions = (format: CanvasFormat): { width: number, height: number } => {
@@ -167,4 +167,48 @@ export const generateCopySuggestions = async (flyerType: FlyerType, topic: strin
         console.error("Error generating copy suggestions:", error);
         throw error;
     }
+};
+
+export const generateBackgroundImage = async (prompt: string): Promise<string> => {
+    if (!process.env.API_KEY) {
+        throw new Error("API_KEY environment variable not set");
+    }
+    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+    const response = await ai.models.generateContent({
+        model: 'gemini-2.5-flash-image',
+        contents: {
+            parts: [{ text: prompt }],
+        },
+        config: {
+            responseModalities: [Modality.IMAGE],
+        },
+    });
+
+    for (const part of response.candidates[0].content.parts) {
+        if (part.inlineData) {
+            return `data:${part.inlineData.mimeType};base64,${part.inlineData.data}`;
+        }
+    }
+    throw new Error("No image data found in the response.");
+};
+
+
+export const generateImagePromptSuggestion = async (topic: string): Promise<string> => {
+    if (!process.env.API_KEY) {
+        throw new Error("API_KEY environment variable not set");
+    }
+    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+    const prompt = `
+        Based on the flyer topic "${topic}", generate one creative, concise, and visually descriptive prompt for an AI image generator to create a background image.
+        The prompt should focus on abstract concepts, textures, or artistic styles rather than specific people or text.
+        Do not add any explanation or preamble. Respond with only the prompt.
+        
+        Example for topic "AI & The Future of Design":
+        Abstract network of glowing neural pathways and geometric shapes, dark blue and purple background
+    `;
+    const response = await ai.models.generateContent({
+        model: 'gemini-2.5-flash',
+        contents: prompt,
+    });
+    return response.text.trim();
 };
