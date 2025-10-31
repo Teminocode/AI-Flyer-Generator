@@ -6,7 +6,15 @@ import FlyerPreview from './components/FlyerPreview';
 import BrandKitManager from './components/BrandKitManager';
 import ColorPaletteSelector from './components/ColorPaletteSelector';
 import BackgroundSelector from './components/BackgroundSelector';
-import { SparklesIcon, RefreshCwIcon, SpinnerIcon, QrCodeIcon } from './components/icons';
+import { 
+    SparklesIcon, 
+    RefreshCwIcon, 
+    SpinnerIcon, 
+    QrCodeIcon,
+    TextIcon,
+    BriefcaseIcon,
+    PhotoIcon
+} from './components/icons';
 
 // Declare QRCode as a global for the QR code generation
 declare const QRCode: any;
@@ -14,6 +22,24 @@ declare const QRCode: any;
 const flyerTypes: FlyerType[] = ['Event Announcement', 'Product Promotion', 'Grand Opening', 'Workshop or Seminar', 'Hiring Ad'];
 const canvasFormats: CanvasFormat[] = ['Instagram Post (Square 1080x1080)', 'Instagram Post (Portrait 1080x1350)', 'Instagram Story (1080x1920)', 'Landscape (1920x1080)', 'A4 Document (2480x3508)'];
 const styleThemes: StyleTheme[] = ['Minimalist & Clean', 'Bold & Modern', 'Elegant & Corporate', 'Fun & Playful', 'AI Choice'];
+
+// Helper component for tabs
+const TabButton: React.FC<{ icon: React.ReactNode; label: string; isActive: boolean; onClick: () => void; }> = ({ icon, label, isActive, onClick }) => (
+    <button
+        onClick={onClick}
+        aria-selected={isActive}
+        role="tab"
+        className={`flex-1 md:flex-none flex items-center justify-center md:justify-start gap-2 px-3 py-2 text-sm font-medium rounded-t-lg border-b-2 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500 ${
+            isActive
+                ? 'border-indigo-600 text-indigo-700 bg-indigo-50/70'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-100'
+        }`}
+    >
+        {icon}
+        <span className="hidden md:inline">{label}</span>
+    </button>
+);
+
 
 const App: React.FC = () => {
     const [flyerOptions, setFlyerOptions] = useState<FlyerOptions>({
@@ -37,6 +63,7 @@ const App: React.FC = () => {
     const [isLoading, setIsLoading] = useState(false);
     const [isCopyLoading, setIsCopyLoading] = useState(false);
     const [copySuggestions, setCopySuggestions] = useState<string[]>([]);
+    const [activeTab, setActiveTab] = useState<'content' | 'branding' | 'style'>('content');
     
     const updateOption = <K extends keyof FlyerOptions>(key: K, value: FlyerOptions[K]) => {
         setFlyerOptions(prev => ({ ...prev, [key]: value }));
@@ -100,70 +127,103 @@ const App: React.FC = () => {
     return (
         <div className="flex h-screen bg-gray-50 font-sans">
             {/* Controls Panel */}
-            <aside className="w-[420px] h-full flex-shrink-0 bg-white border-r border-gray-200 overflow-y-auto p-6 space-y-6">
-                <header>
-                    <h1 className="text-2xl font-bold text-gray-800">Gemini Flyer Generator</h1>
+            <aside className="w-[480px] h-full flex-shrink-0 bg-white border-r border-gray-200 flex flex-col">
+                <header className="p-6">
+                    <h1 className="text-2xl font-bold text-gray-800">Outnovately Flyer Generator</h1>
                     <p className="text-sm text-gray-500">Create stunning flyers with the power of AI.</p>
                 </header>
 
-                {/* Main Form Sections */}
-                <Section title="1. Flyer Content">
-                    <div className="space-y-4">
-                        <Select label="Flyer Type" value={flyerOptions.flyerType} onChange={e => updateOption('flyerType', e.target.value as FlyerType)} options={flyerTypes} />
-                        <Input label="Topic or Event Title" placeholder="e.g., Summer Music Festival" value={flyerOptions.topic} onChange={e => updateOption('topic', e.target.value)} />
-                        <div>
-                            <Textarea
-                                label="Primary Text"
-                                value={flyerOptions.primaryText}
-                                onChange={e => updateOption('primaryText', e.target.value)}
-                                rows={4}
-                                helpText="Use format: Title;Subtitle;Support Line 1;Support Line 2"
-                            />
-                            <button onClick={handleGetCopySuggestions} disabled={isCopyLoading || !flyerOptions.topic.trim()} className="mt-2 text-sm text-indigo-600 font-semibold hover:text-indigo-800 disabled:text-gray-400 disabled:cursor-not-allowed flex items-center gap-1">
-                                {isCopyLoading ? <SpinnerIcon className="w-4 h-4" /> : <SparklesIcon className="w-4 h-4" />}
-                                Get AI Suggestions
-                            </button>
-                             {copySuggestions.length > 0 && (
-                                <div className="mt-2 space-y-1">
-                                    {copySuggestions.map((s, i) => (
-                                        <button key={i} onClick={() => updateOption('primaryText', s)} className="block w-full text-left text-xs p-2 bg-gray-100 hover:bg-indigo-100 rounded text-gray-600 truncate">
-                                            {s.split(';')[0]}
-                                        </button>
-                                    ))}
+                 {/* Tab Navigation */}
+                <div className="px-4 sm:px-6 border-y border-gray-200">
+                    <nav className="flex space-x-1 sm:space-x-2" role="tablist" aria-label="Flyer sections">
+                        <TabButton
+                            icon={<TextIcon className="w-5 h-5" />}
+                            label="Content"
+                            isActive={activeTab === 'content'}
+                            onClick={() => setActiveTab('content')}
+                        />
+                        <TabButton
+                            icon={<BriefcaseIcon className="w-5 h-5" />}
+                            label="Branding"
+                            isActive={activeTab === 'branding'}
+                            onClick={() => setActiveTab('branding')}
+                        />
+                        <TabButton
+                            icon={<PhotoIcon className="w-5 h-5" />}
+                            label="Style"
+                            isActive={activeTab === 'style'}
+                            onClick={() => setActiveTab('style')}
+                        />
+                    </nav>
+                </div>
+                
+                <div className="flex-1 overflow-y-auto p-6 space-y-6">
+                    {activeTab === 'content' && (
+                        <Section title="Flyer Content">
+                            <div className="space-y-4">
+                                <Select label="Flyer Type" value={flyerOptions.flyerType} onChange={e => updateOption('flyerType', e.target.value as FlyerType)} options={flyerTypes} />
+                                <Input label="Topic or Event Title" placeholder="e.g., Summer Music Festival" value={flyerOptions.topic} onChange={e => updateOption('topic', e.target.value)} />
+                                <div>
+                                    <Textarea
+                                        label="Primary Text"
+                                        value={flyerOptions.primaryText}
+                                        onChange={e => updateOption('primaryText', e.target.value)}
+                                        rows={4}
+                                        helpText="Use format: Title;Subtitle;Support Line 1;Support Line 2"
+                                    />
+                                    <button onClick={handleGetCopySuggestions} disabled={isCopyLoading || !flyerOptions.topic.trim()} className="mt-2 text-sm text-indigo-600 font-semibold hover:text-indigo-800 disabled:text-gray-400 disabled:cursor-not-allowed flex items-center gap-1">
+                                        {isCopyLoading ? <SpinnerIcon className="w-4 h-4" /> : <SparklesIcon className="w-4 h-4" />}
+                                        Get AI Suggestions
+                                    </button>
+                                     {copySuggestions.length > 0 && (
+                                        <div className="mt-2 space-y-1">
+                                            {copySuggestions.map((s, i) => (
+                                                <button key={i} onClick={() => updateOption('primaryText', s)} className="block w-full text-left text-xs p-2 bg-gray-100 hover:bg-indigo-100 rounded text-gray-600 truncate">
+                                                    {s.split(';')[0]}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    )}
                                 </div>
-                            )}
-                        </div>
-                        <Textarea label="Details Block" value={flyerOptions.detailsBlock} onChange={e => updateOption('detailsBlock', e.target.value)} rows={3} helpText="Separate items with '|'. e.g., Date: ... | Time: ..."/>
-                        <Input label="Call to Action (CTA)" placeholder="e.g., Register Now" value={flyerOptions.ctaText} onChange={e => updateOption('ctaText', e.target.value)} />
-                    </div>
-                </Section>
-                
-                <Section title="2. Branding & Assets">
-                     <BrandKitManager
-                        logo={logo}
-                        onLogoSelect={setLogo}
-                        speakerImage={speakerImage}
-                        onSpeakerImageSelect={setSpeakerImage}
-                        brandName={flyerOptions.brandName}
-                        onBrandNameChange={name => updateOption('brandName', name)}
-                    />
-                </Section>
-                
-                <Section title="3. Design & Style">
-                    <div className="space-y-4">
-                        <Select label="Canvas Format" value={flyerOptions.canvasFormat} onChange={e => updateOption('canvasFormat', e.target.value as CanvasFormat)} options={canvasFormats} />
-                        <Select label="Style Theme" value={flyerOptions.styleTheme} onChange={e => updateOption('styleTheme', e.target.value as StyleTheme)} options={styleThemes} />
-                        <ColorPaletteSelector primaryColor={flyerOptions.primaryColor} accentColor={flyerOptions.accentColor} onColorChange={(p, a) => setFlyerOptions(prev => ({...prev, primaryColor: p, accentColor: a}))} />
-                        <BackgroundSelector onFileSelect={setBackgroundImage} />
-                        <div className="relative">
-                            <label htmlFor="qr-code" className="flex items-center gap-2 text-sm font-medium text-gray-600 mb-2"><QrCodeIcon className="w-5 h-5"/> QR Code URL (Optional)</label>
-                            <input id="qr-code" type="text" value={qrCodeUrl} onChange={e => setQrCodeUrl(e.target.value)} placeholder="https://your-website.com" className="block w-full text-sm border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500" />
-                        </div>
-                    </div>
-                </Section>
+                                <Textarea label="Details Block" value={flyerOptions.detailsBlock} onChange={e => updateOption('detailsBlock', e.target.value)} rows={3} helpText="Separate items with '|'. e.g., Date: ... | Time: ..."/>
+                                <Input label="Call to Action (CTA)" placeholder="e.g., Register Now" value={flyerOptions.ctaText} onChange={e => updateOption('ctaText', e.target.value)} />
+                            </div>
+                        </Section>
+                    )}
+
+                    {activeTab === 'branding' && (
+                        <Section title="Branding & Assets">
+                            <div className="space-y-6">
+                                <BrandKitManager
+                                    logo={logo}
+                                    onLogoSelect={setLogo}
+                                    speakerImage={speakerImage}
+                                    onSpeakerImageSelect={setSpeakerImage}
+                                    brandName={flyerOptions.brandName}
+                                    onBrandNameChange={name => updateOption('brandName', name)}
+                                />
+                                <ColorPaletteSelector primaryColor={flyerOptions.primaryColor} accentColor={flyerOptions.accentColor} onColorChange={(p, a) => setFlyerOptions(prev => ({...prev, primaryColor: p, accentColor: a}))} />
+                            </div>
+                        </Section>
+                    )}
+
+                    {activeTab === 'style' && (
+                        <Section title="Design & Style">
+                            <div className="space-y-4">
+                                <Select label="Canvas Format" value={flyerOptions.canvasFormat} onChange={e => updateOption('canvasFormat', e.target.value as CanvasFormat)} options={canvasFormats} />
+                                <Select label="Style Theme" value={flyerOptions.styleTheme} onChange={e => updateOption('styleTheme', e.target.value as StyleTheme)} options={styleThemes} />
+                                <BackgroundSelector onFileSelect={setBackgroundImage} />
+                                <div className="relative">
+                                    <label htmlFor="qr-code" className="flex items-center gap-2 text-sm font-medium text-gray-600 mb-2"><QrCodeIcon className="w-5 h-5"/> QR Code URL (Optional)</label>
+                                    <input id="qr-code" type="text" value={qrCodeUrl} onChange={e => setQrCodeUrl(e.target.value)} placeholder="https://your-website.com" className="block w-full text-sm border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500" />
+                                </div>
+                            </div>
+                        </Section>
+                    )}
+                </div>
                  
                 {/* Actions */}
-                <div className="space-y-3 pt-4 border-t border-gray-200">
+                <div className="p-6 space-y-3 border-t border-gray-200">
                     <button
                         onClick={() => handleGenerateFlyer()}
                         disabled={isLoading}
