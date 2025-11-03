@@ -125,9 +125,9 @@ const App: React.FC = () => {
     }, []);
 
     return (
-        <div className="flex h-screen bg-gray-50 font-sans">
+        <div className="flex flex-col md:flex-row md:h-screen bg-gray-50 font-sans">
             {/* Controls Panel */}
-            <aside className="w-[480px] h-full flex-shrink-0 bg-white border-r border-gray-200 flex flex-col">
+            <aside className="w-full md:w-[480px] md:h-full flex-shrink-0 bg-white md:border-r border-gray-200 flex flex-col">
                 <header className="p-6">
                     <h1 className="text-2xl font-bold text-gray-800">Outnovately Flyer Generator</h1>
                     <p className="text-sm text-gray-500">Create stunning flyers with the power of AI.</p>
@@ -247,7 +247,7 @@ const App: React.FC = () => {
             </aside>
             
             {/* Preview Panel */}
-            <main className="flex-1 flex flex-col items-center justify-center p-6 lg:p-10 bg-gray-100">
+            <main className="flex-1 flex flex-col items-center justify-center p-4 md:p-6 lg:p-10 bg-gray-100">
                 {isLoading && !htmlContent ? (
                     <div className="flex flex-col items-center gap-4 text-gray-500">
                         <SpinnerIcon className="w-12 h-12 text-indigo-500" />
